@@ -1,0 +1,41 @@
+RESUME
+
+Name: Rohan Verma
+Title: Full Stack Web Developer (Python)
+Location: Hyderabad, India
+Email: rohan.verma.fullstack@example.com | Phone: +91-98xxxxxx03
+
+PROFESSIONAL SUMMARY
+Full Stack Developer with 7 years of experience building end-to-end web applications
+using Python on the backend (Django, Flask, FastAPI) and React on the frontend.
+Experienced in relational database design, REST API development, and cloud deployment.
+
+TECHNICAL SKILLS
+- Languages: Python, JavaScript, TypeScript, SQL
+- Backend: Django, Django REST Framework, Flask, FastAPI
+- Frontend: React.js, Redux, HTML5, CSS3, Bootstrap
+- Databases: PostgreSQL, MySQL, MongoDB, Redis
+- Cloud/DevOps: AWS (EC2, S3, Lambda, RDS), Docker, CI/CD with GitHub Actions
+- Testing: Pytest, Selenium, Jest
+- Other: Celery, WebSockets, GraphQL
+
+PROFESSIONAL EXPERIENCE
+
+Full Stack Developer, HealthBridge Software (2021 - Present)
+- Built a telemedicine platform end-to-end using Django REST Framework and React,
+  supporting 50,000+ registered patients.
+- Designed PostgreSQL schema and optimized queries for appointment scheduling module.
+- Implemented asynchronous task processing with Celery and Redis for notification delivery.
+- Deployed application on AWS using Docker containers and set up CI/CD pipelines.
+
+Software Engineer, Full Stack, Nimbus Retail Tech (2017 - 2021)
+- Developed a Flask-based inventory management system with a React frontend.
+- Built REST APIs consumed by both web and mobile clients.
+- Automated deployment using Docker and Jenkins pipelines.
+
+EDUCATION
+B.Tech in Computer Science, Osmania University (2013 - 2017)
+
+CERTIFICATIONS
+- AWS Certified Solutions Architect - Associate
+- Python Institute PCPP

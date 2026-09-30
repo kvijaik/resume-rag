@@ -1,0 +1,45 @@
+RESUME
+
+Name: Arjun Mehta
+Title: Java Backend Developer (Spring Boot)
+Location: Bengaluru, India
+Email: arjun.mehta.dev@example.com | Phone: +91-98xxxxxx01
+
+PROFESSIONAL SUMMARY
+Java Backend Developer with 6 years of experience designing and building scalable
+microservices using Spring Boot, Spring Cloud, and REST APIs. Strong background in
+distributed systems, message queues, and relational/NoSQL databases. Experienced in
+leading backend modules for high-traffic e-commerce and fintech platforms.
+
+TECHNICAL SKILLS
+- Languages: Java 8/11/17, SQL
+- Frameworks: Spring Boot, Spring MVC, Spring Data JPA, Spring Security, Spring Cloud
+- Messaging: Apache Kafka, RabbitMQ
+- Databases: MySQL, PostgreSQL, MongoDB, Redis (caching)
+- API: REST, GraphQL, gRPC
+- Build/CI: Maven, Gradle, Jenkins, GitHub Actions
+- Containers/Cloud: Docker, Kubernetes, AWS (EC2, S3, RDS)
+- Testing: JUnit 5, Mockito, TestContainers
+
+PROFESSIONAL EXPERIENCE
+
+Senior Java Backend Developer, FinEdge Technologies (2021 - Present)
+- Designed and implemented microservices with Spring Boot handling 5M+ daily transactions.
+- Built event-driven architecture using Kafka for real-time payment reconciliation.
+- Migrated a monolithic Java application to Spring Boot microservices, reducing deployment
+  time by 60%.
+- Implemented Spring Security with OAuth2/JWT for API authentication and authorization.
+- Optimized JPA/Hibernate queries, reducing average API latency by 35%.
+
+Java Developer, RetailNext Systems (2018 - 2021)
+- Developed REST APIs using Spring MVC and Spring Data JPA for an e-commerce order
+  management system.
+- Wrote unit and integration tests with JUnit and Mockito, achieving 85% code coverage.
+- Containerized services with Docker and deployed to Kubernetes clusters on AWS.
+
+EDUCATION
+B.E. in Computer Science, Visvesvaraya Technological University (2014 - 2018)
+
+CERTIFICATIONS
+- Spring Professional Certification
+- AWS Certified Developer - Associate

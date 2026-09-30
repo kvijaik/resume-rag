@@ -1,0 +1,43 @@
+RESUME
+
+Name: Vikram Rao
+Title: DevOps / Cloud Engineer (AWS)
+Location: Mumbai, India
+Email: vikram.rao.devops@example.com | Phone: +91-98xxxxxx06
+
+PROFESSIONAL SUMMARY
+DevOps and Cloud Engineer with 7 years of experience automating infrastructure and
+deployment pipelines on AWS. Expert in Infrastructure as Code, Kubernetes, and building
+reliable CI/CD systems for high-availability applications.
+
+TECHNICAL SKILLS
+- Cloud: AWS (EC2, S3, RDS, Lambda, ECS, EKS, CloudFormation), basics of Azure
+- IaC: Terraform, AWS CloudFormation, Ansible
+- Containers/Orchestration: Docker, Kubernetes, Helm
+- CI/CD: Jenkins, GitHub Actions, GitLab CI, ArgoCD
+- Monitoring: Prometheus, Grafana, CloudWatch, ELK Stack
+- Scripting: Python, Bash, Go (basic)
+- Version Control: Git, GitOps workflows
+
+PROFESSIONAL EXPERIENCE
+
+Senior DevOps Engineer, CloudNova Systems (2021 - Present)
+- Migrated a monolithic application to a Kubernetes (EKS) based microservices platform
+  on AWS, improving deployment frequency from weekly to multiple times per day.
+- Wrote Terraform modules to provision multi-environment AWS infrastructure, reducing
+  environment setup time from days to hours.
+- Built GitOps-based CI/CD pipelines with ArgoCD and GitHub Actions.
+- Set up centralized monitoring and alerting using Prometheus and Grafana.
+
+Cloud/DevOps Engineer, DataForge Cloud (2018 - 2021)
+- Automated AWS infrastructure provisioning using CloudFormation and Ansible.
+- Implemented autoscaling and cost-optimization strategies, cutting AWS spend by 25%.
+- Managed Jenkins CI/CD pipelines for over 20 microservices.
+
+EDUCATION
+B.E. in Information Technology, Mumbai University (2013 - 2017)
+
+CERTIFICATIONS
+- AWS Certified DevOps Engineer - Professional
+- Certified Kubernetes Administrator (CKA)
+- HashiCorp Certified: Terraform Associate

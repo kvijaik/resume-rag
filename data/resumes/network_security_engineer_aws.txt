@@ -1,0 +1,45 @@
+RESUME
+
+Name: Karan Singh
+Title: Network Security Engineer (AWS)
+Location: Gurugram, India
+Email: karan.singh.netsec@example.com | Phone: +91-98xxxxxx04
+
+PROFESSIONAL SUMMARY
+Network Security Engineer with 8 years of experience securing enterprise and cloud
+network infrastructure. Specializes in AWS network security architecture, firewalls,
+VPNs, intrusion detection/prevention, and zero-trust network design.
+
+TECHNICAL SKILLS
+- Cloud Security: AWS VPC, Security Groups, NACLs, AWS WAF, AWS Shield, AWS Network Firewall
+- Networking: TCP/IP, DNS, BGP, VPN (IPSec, SSL VPN), Load Balancing
+- Security Tools: Palo Alto Firewalls, Cisco ASA, Fortinet, Snort IDS/IPS, Splunk SIEM
+- Identity: AWS IAM, SSO, Zero Trust Network Access (ZTNA)
+- Monitoring: AWS CloudTrail, VPC Flow Logs, GuardDuty, CloudWatch
+- Scripting: Python, Bash for security automation
+- Compliance: ISO 27001, PCI-DSS, NIST framework
+
+PROFESSIONAL EXPERIENCE
+
+Senior Network Security Engineer, SecureCloud Systems (2020 - Present)
+- Designed and implemented secure multi-VPC AWS network architecture with transit
+  gateways, segmented subnets, and centralized firewall inspection.
+- Deployed AWS Network Firewall and WAF rules to mitigate DDoS and web-layer attacks,
+  reducing incident volume by 45%.
+- Led migration from on-premises firewalls to AWS-native security controls.
+- Automated security group and NACL audits using Python and AWS Lambda.
+- Configured GuardDuty and Security Hub for continuous threat detection across accounts.
+
+Network Security Engineer, TelNet Infrastructure (2016 - 2020)
+- Managed enterprise firewall infrastructure (Palo Alto, Cisco ASA) for a 5,000-employee
+  organization.
+- Implemented IPSec site-to-site VPNs connecting branch offices to AWS VPCs.
+- Monitored network traffic using Splunk SIEM and responded to security incidents.
+
+EDUCATION
+B.E. in Electronics and Communication, Delhi Technological University (2012 - 2016)
+
+CERTIFICATIONS
+- AWS Certified Security - Specialty
+- Cisco CCNP Security
+- CompTIA Security+

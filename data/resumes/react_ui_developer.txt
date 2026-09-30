@@ -1,0 +1,43 @@
+RESUME
+
+Name: Priya Sharma
+Title: React UI Developer (Frontend Engineer)
+Location: Pune, India
+Email: priya.sharma.ui@example.com | Phone: +91-98xxxxxx02
+
+PROFESSIONAL SUMMARY
+Frontend Engineer with 5 years of experience building responsive, accessible, and
+performant user interfaces using React.js. Skilled in component architecture, state
+management, and modern JavaScript/TypeScript tooling. Passionate about design systems
+and web performance optimization.
+
+TECHNICAL SKILLS
+- Languages: JavaScript (ES6+), TypeScript, HTML5, CSS3
+- Frameworks/Libraries: React.js, Redux, Redux Toolkit, React Router, Next.js
+- Styling: Tailwind CSS, Styled Components, SASS, Material UI
+- Testing: Jest, React Testing Library, Cypress
+- Tooling: Webpack, Vite, ESLint, Prettier
+- API Integration: REST, GraphQL (Apollo Client)
+- Design Collaboration: Figma, Storybook
+
+PROFESSIONAL EXPERIENCE
+
+Senior React UI Developer, ShopWave Inc. (2022 - Present)
+- Led frontend development of a customer-facing React.js e-commerce storefront serving
+  2M+ monthly active users.
+- Built a reusable component library with Storybook, reducing new feature development
+  time by 30%.
+- Implemented code-splitting and lazy loading, improving Lighthouse performance score
+  from 68 to 94.
+- Migrated legacy class components to functional components with React Hooks.
+
+Frontend Developer, MediaStream Labs (2019 - 2022)
+- Developed responsive UI screens using React and Redux for a video streaming dashboard.
+- Integrated REST and GraphQL APIs for real-time content updates.
+- Wrote unit and end-to-end tests using Jest and Cypress, improving release confidence.
+
+EDUCATION
+B.Tech in Information Technology, Pune Institute of Computer Technology (2015 - 2019)
+
+CERTIFICATIONS
+- Meta Front-End Developer Professional Certificate

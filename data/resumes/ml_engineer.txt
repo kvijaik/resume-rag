@@ -1,0 +1,43 @@
+RESUME
+
+Name: Aditya Nair
+Title: Machine Learning Engineer
+Location: Bengaluru, India
+Email: aditya.nair.ml@example.com | Phone: +91-98xxxxxx08
+
+PROFESSIONAL SUMMARY
+Machine Learning Engineer with 5 years of experience building and deploying ML models
+into production. Strong background in Python-based ML frameworks, MLOps practices, and
+NLP/LLM-based applications, including retrieval-augmented generation (RAG) systems.
+
+TECHNICAL SKILLS
+- Languages: Python, SQL
+- ML/DL Frameworks: TensorFlow, PyTorch, scikit-learn, Hugging Face Transformers
+- LLM/RAG: LangChain, LlamaIndex, vector databases (FAISS, Pinecone), prompt engineering
+- MLOps: MLflow, Docker, Kubernetes, AWS SageMaker, CI/CD for ML pipelines
+- Data: Pandas, NumPy, Spark (basic)
+- Visualization: Matplotlib, Seaborn
+
+PROFESSIONAL EXPERIENCE
+
+Machine Learning Engineer, CogniSearch AI (2022 - Present)
+- Built a retrieval-augmented generation (RAG) chatbot using LangChain, FAISS, and
+  OpenAI APIs for enterprise document search, improving support response time by 40%.
+- Designed prompt engineering strategies and grounding techniques to reduce
+  hallucination in LLM-based applications.
+- Deployed ML models to production using AWS SageMaker and Docker, with MLflow for
+  experiment tracking.
+- Fine-tuned transformer-based NLP models for text classification and entity extraction.
+
+Data Scientist, PredictIQ Analytics (2019 - 2022)
+- Built classification and regression models using scikit-learn for customer churn
+  prediction, improving retention campaign targeting.
+- Developed NLP pipelines for sentiment analysis using spaCy and Hugging Face.
+
+EDUCATION
+M.Tech in Artificial Intelligence, IIIT Bangalore (2017 - 2019)
+B.Tech in Computer Science, NIT Trichy (2013 - 2017)
+
+CERTIFICATIONS
+- AWS Certified Machine Learning - Specialty
+- DeepLearning.AI TensorFlow Developer Certificate

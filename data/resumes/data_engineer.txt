@@ -1,0 +1,42 @@
+RESUME
+
+Name: Sneha Kulkarni
+Title: Data Engineer
+Location: Bengaluru, India
+Email: sneha.kulkarni.data@example.com | Phone: +91-98xxxxxx07
+
+PROFESSIONAL SUMMARY
+Data Engineer with 6 years of experience designing and building scalable data
+pipelines and warehousing solutions. Skilled in batch and streaming data processing
+using Python, Spark, and cloud-native data services on AWS.
+
+TECHNICAL SKILLS
+- Languages: Python, SQL, Scala (basic)
+- Big Data: Apache Spark, Apache Kafka, Hadoop
+- Orchestration: Apache Airflow
+- Cloud Data Services: AWS Redshift, AWS Glue, S3, Athena, EMR
+- Databases: PostgreSQL, Snowflake, DynamoDB
+- Data Modeling: Star schema, dimensional modeling, ETL/ELT design
+- Visualization: Tableau, Power BI (basic)
+
+PROFESSIONAL EXPERIENCE
+
+Senior Data Engineer, InsightWorks Analytics (2021 - Present)
+- Built ETL/ELT pipelines using Apache Airflow and Spark to process 10TB+ of daily
+  data from multiple sources into AWS Redshift.
+- Designed a streaming pipeline with Kafka and Spark Structured Streaming for
+  real-time analytics dashboards.
+- Optimized Redshift queries and table design, reducing average query time by 40%.
+- Migrated legacy on-prem ETL jobs to AWS Glue and S3-based data lake architecture.
+
+Data Engineer, RetailMetrics Corp (2018 - 2021)
+- Developed batch data pipelines in Python and SQL for sales and inventory reporting.
+- Built data quality checks and monitoring for pipeline reliability.
+- Collaborated with data science team to productionize feature pipelines.
+
+EDUCATION
+B.Tech in Computer Science, RV College of Engineering (2014 - 2018)
+
+CERTIFICATIONS
+- AWS Certified Data Analytics - Specialty
+- Databricks Certified Data Engineer Associate

@@ -1,0 +1,43 @@
+RESUME
+
+Name: Ananya Iyer
+Title: Application Security Engineer
+Location: Chennai, India
+Email: ananya.iyer.appsec@example.com | Phone: +91-98xxxxxx05
+
+PROFESSIONAL SUMMARY
+Application Security Engineer with 6 years of experience embedding security into the
+software development lifecycle (DevSecOps). Skilled in secure code review, threat
+modeling, SAST/DAST tooling, and penetration testing of web and API applications.
+
+TECHNICAL SKILLS
+- AppSec Practices: Secure SDLC, Threat Modeling (STRIDE), OWASP Top 10, OWASP ASVS
+- Testing Tools: Burp Suite, OWASP ZAP, Checkmarx, SonarQube, Fortify, Nessus
+- Languages: Python, Java, JavaScript (for security tooling and code review)
+- DevSecOps: CI/CD security gates (Jenkins, GitHub Actions), SAST/DAST/SCA integration
+- Cloud Security: AWS Security best practices, container image scanning (Trivy, Snyk)
+- API Security: OAuth2, JWT, API gateway security, rate limiting
+- Compliance: PCI-DSS, SOC 2, GDPR
+
+PROFESSIONAL EXPERIENCE
+
+Application Security Engineer, PayStack Financial (2021 - Present)
+- Performed secure code reviews and threat modeling for microservices handling
+  payment data, identifying and remediating critical OWASP Top 10 vulnerabilities.
+- Integrated SAST (Checkmarx) and DAST (OWASP ZAP) into CI/CD pipelines, shifting
+  security left and reducing production vulnerabilities by 50%.
+- Conducted penetration testing on web applications and REST APIs using Burp Suite.
+- Built a vulnerability management dashboard to track remediation SLAs across teams.
+
+Security Analyst, AppShield Consulting (2018 - 2021)
+- Conducted application penetration tests for banking and healthcare clients.
+- Delivered security training and secure coding guidelines to development teams.
+- Automated dependency vulnerability scanning using Snyk and OWASP Dependency-Check.
+
+EDUCATION
+B.Tech in Computer Science, Anna University (2014 - 2018)
+
+CERTIFICATIONS
+- OSCP (Offensive Security Certified Professional)
+- CEH (Certified Ethical Hacker)
+- GWAPT (GIAC Web Application Penetration Tester)
