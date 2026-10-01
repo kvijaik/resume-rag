@@ -109,8 +109,9 @@ def is_query_too_vague(query: str) -> bool:
     if len(words) < config.MIN_QUERY_WORDS:  # too few words to describe a real hiring requirement
         return True
     generic_only = {"hi", "hello", "hey", "help", "resume", "resumes", "test", "?"}  # words that carry no role/skill information on their own
-    if {w.lower().strip("?.! ") for w in words} <= generic_only:  # normalize each word (lowercase, strip punctuation) and check if EVERY word is in the generic set
-        return True  # the whole query is made up of only generic/greeting words -> treat as unclear
+    normalized = {w.lower().strip("?.! ") for w in words} - {""}  # normalize each word (lowercase, strip punctuation); drop tokens that were only punctuation (e.g. "?")
+    if not normalized or normalized <= generic_only:  # nothing substantive left, or EVERY word is in the generic set
+        return True  # the whole query is made up of only punctuation or generic/greeting words -> treat as unclear
     return False  # query has enough substantive words to attempt retrieval
 
 

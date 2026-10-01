@@ -1,0 +1,20 @@
+[
+  {"id": "java-01",   "query": "Have requirement for Java Full stack developer, provide the matching resume", "expected_status": "matched", "relevant": ["java_backend_springboot.txt", "fullstack_python_developer.txt"]},
+  {"id": "java-02",   "query": "Java backend developer with Spring Boot and microservices",                  "expected_status": "matched", "relevant": ["java_backend_springboot.txt"]},
+  {"id": "react-01",  "query": "Need a React frontend developer with Redux experience",                       "expected_status": "matched", "relevant": ["react_ui_developer.txt"]},
+  {"id": "react-02",  "query": "UI engineer who builds accessible components with TypeScript",                "expected_status": "matched", "relevant": ["react_ui_developer.txt"]},
+  {"id": "fs-01",     "query": "Full stack Python web developer with Django or Flask",                        "expected_status": "matched", "relevant": ["fullstack_python_developer.txt"]},
+  {"id": "netsec-01", "query": "Looking for an AWS network security engineer with firewall experience",      "expected_status": "matched", "relevant": ["network_security_engineer_aws.txt"]},
+  {"id": "appsec-01", "query": "Application security engineer with OWASP and penetration testing skills",    "expected_status": "matched", "relevant": ["application_security_engineer.txt"]},
+  {"id": "devops-01", "query": "AWS DevOps engineer with Terraform and Kubernetes",                          "expected_status": "matched", "relevant": ["devops_cloud_engineer_aws.txt"]},
+  {"id": "devops-02", "query": "Cloud engineer to build CI/CD pipelines and infrastructure as code",         "expected_status": "matched", "relevant": ["devops_cloud_engineer_aws.txt"]},
+  {"id": "data-01",   "query": "Data engineer with Spark, Airflow and ETL pipelines",                        "expected_status": "matched", "relevant": ["data_engineer.txt"]},
+  {"id": "ml-01",     "query": "Machine learning engineer with PyTorch and model deployment",                "expected_status": "matched", "relevant": ["ml_engineer.txt"]},
+  {"id": "unclear-01","query": "help",                                                                        "expected_status": "unclear", "relevant": []},
+  {"id": "unclear-02","query": "hi resume",                                                                   "expected_status": "unclear", "relevant": []},
+  {"id": "unclear-03","query": "? ? ?",                                                                       "expected_status": "unclear", "relevant": []},
+  {"id": "oos-01",    "query": "I need a professional chef with 10 years of experience in Italian cuisine",  "expected_status": "no_match", "relevant": []},
+  {"id": "oos-02",    "query": "what is the weather",                                                         "expected_status": "no_match", "relevant": []},
+  {"id": "oos-03",    "query": "Looking for a certified nurse for night shifts at a hospital",               "expected_status": "no_match", "relevant": []},
+  {"id": "oos-04",    "query": "Need a truck driver with a heavy vehicle licence",                           "expected_status": "no_match", "relevant": []}
+]
