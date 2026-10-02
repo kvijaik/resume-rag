@@ -39,12 +39,13 @@ def test_first_load_shows_greeting_banner_and_sidebar(app):
 
 
 def test_no_demo_banner_outside_demo_mode(app, monkeypatch):
-    monkeypatch.setattr(config, "DEMO_MODE", False)
-    # Keep loading the demo index: only the banner check reads DEMO_MODE before the load.
+    # Load the demo index while DEMO_MODE is still on; loading after switching it
+    # off would build OpenAI embeddings and need an API key (which CI does not have).
     from app import rag_chain
 
     demo_store = rag_chain.load_vectorstore()
     monkeypatch.setattr(rag_chain, "load_vectorstore", lambda: demo_store)
+    monkeypatch.setattr(config, "DEMO_MODE", False)
     app.run()
     assert not app.exception
     assert len(app.info) == 0
