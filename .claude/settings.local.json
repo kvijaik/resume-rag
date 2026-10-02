@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(/Users/vijaik/Downloads/resume-rag/venv/bin/python -c \"import streamlit, langchain, faiss, sklearn; print\\('ok'\\)\")"
-    ]
-  }
-}
