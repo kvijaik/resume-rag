@@ -33,7 +33,8 @@ def test_first_load_shows_greeting_banner_and_sidebar(app):
     assert "Hi! Describe a hiring requirement" in app.chat_message[0].markdown[0].value
     sidebar_text = " ".join(m.value for m in app.sidebar.markdown)
     assert "Machine Learning Engineer" in sidebar_text
-    assert len(app.sidebar.button) == 4
+    assert len([b for b in app.sidebar.button if b.key.startswith("ex_")]) == 4
+    assert app.file_uploader(key="resume_upload").label == "Upload .txt, .pdf or .docx files"
 
 
 def test_no_demo_banner_outside_demo_mode(app, monkeypatch):
@@ -88,3 +89,34 @@ def test_importing_the_module_does_not_render_the_page(vectorstore):
 
     namespace = runpy.run_path(APP_FILE, run_name="streamlit_app")
     assert set(namespace["STATUS_BADGES"]) == {"matched", "no_match", "unclear"}
+
+
+def test_add_button_is_disabled_until_files_are_chosen(app):
+    app.run()
+    assert app.button(key="add_resumes").disabled
+
+
+def test_uploaded_resume_is_added_and_searchable(app, library):
+    from tests.conftest import GOLANG_RESUME, make_docx
+
+    app.run()
+    app.file_uploader(key="resume_upload").upload("meera.docx", make_docx(GOLANG_RESUME)).run()
+    app.button(key="add_resumes").click().run()
+    assert not app.exception
+    assert app.sidebar.success[0].value == "Added 1 resume(s): meera.docx"
+    assert (library / "meera.docx").exists()
+
+    app.chat_input[0].set_value("Need a Golang developer with gRPC and protobuf").run()
+    assert "meera.docx" in app.chat_message[-1].caption[0].value
+
+
+def test_bad_upload_shows_error_and_keeps_library(app, library):
+    from tests.conftest import make_pdf
+
+    before = sorted(p.name for p in library.iterdir())
+    app.run()
+    app.file_uploader(key="resume_upload").upload("scan.pdf", make_pdf([])).run()
+    app.button(key="add_resumes").click().run()
+    assert "no readable text" in app.sidebar.error[0].value
+    assert len(app.sidebar.success) == 0
+    assert sorted(p.name for p in library.iterdir()) == before

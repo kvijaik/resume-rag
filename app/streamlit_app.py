@@ -12,6 +12,7 @@ import streamlit as st  # Streamlit: builds the web UI (widgets, chat components
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))  # add the project root to sys.path so `from app import ...` resolves when this file is run directly
 from app import config  # noqa: E402  # project settings, used here to check DEMO_MODE
+from app.ingest import SUPPORTED_EXTENSIONS, build_vectorstore, save_uploaded_resume  # noqa: E402  # upload validation + index rebuild
 from app.rag_chain import answer_query, load_vectorstore  # noqa: E402  # RAG pipeline entry point + vector store loader
 
 st.set_page_config(page_title="Resume RAG Assistant", page_icon="🧑‍💻", layout="centered")  # browser tab title/icon and page width, must be the first Streamlit call
@@ -48,6 +49,21 @@ def get_vectorstore():
     return load_vectorstore()
 
 
+def add_uploaded_resumes(files) -> None:
+    """Save uploaded resumes into data/resumes, then rebuild the index so they are searchable right away."""
+    saved = []  # filenames accepted this time
+    for f in files:  # each item is a Streamlit UploadedFile (has .name and .getvalue())
+        try:
+            saved.append(save_uploaded_resume(f.name, f.getvalue()).name)  # validates type + readable text before keeping the file
+        except ValueError as e:
+            st.error(str(e))  # e.g. unsupported type or a scanned PDF; other files in the batch still go through
+    if saved:
+        with st.spinner("Rebuilding the resume index..."):
+            build_vectorstore()  # re-embed the whole library, including the new resumes
+        get_vectorstore.clear()  # drop the cached old index so the next load picks up the new one
+        st.success(f"Added {len(saved)} resume(s): {', '.join(saved)}")
+
+
 def main():
     st.title("🧑‍💻 Resume RAG Assistant")  # page heading
     st.caption(
@@ -74,6 +90,16 @@ def main():
         for q in EXAMPLE_QUERIES:  # render one button per example query
             if st.button(q, use_container_width=True, key=f"ex_{q}"):  # unique widget key per query text, required by Streamlit for buttons in a loop
                 st.session_state["pending_query"] = q  # stash the clicked example so it gets processed as if typed into chat_input below
+        st.divider()
+        st.subheader("Add resumes")
+        uploads = st.file_uploader(
+            "Upload .txt, .pdf or .docx files",
+            type=[ext.lstrip(".") for ext in SUPPORTED_EXTENSIONS],  # the browser file picker only offers these types
+            accept_multiple_files=True,
+            key="resume_upload",
+        )
+        if st.button("Add to library", disabled=not uploads, use_container_width=True, key="add_resumes"):  # disabled until at least one file is chosen
+            add_uploaded_resumes(uploads)
 
     try:
         vectorstore = get_vectorstore()  # load (or fetch cached) FAISS index; raises RuntimeError if `python -m app.ingest` was never run

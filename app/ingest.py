@@ -1,6 +1,8 @@
 """
 Ingestion pipeline: load resumes -> split into chunks -> embed -> store in FAISS.
 
+Supported resume formats: .txt, .pdf (text-based, not scanned) and .docx.
+
 Run directly to (re)build the vector store:
 
     python -m app.ingest
@@ -12,9 +14,11 @@ import re  # standard library: regex, used to parse "Name:" / "Title:" fields ou
 import sys  # standard library: used to tweak sys.path so `app` is importable when run as a script
 from pathlib import Path  # standard library: filesystem paths
 
+import docx2txt  # extracts plain text from Word (.docx) files
 from langchain_community.vectorstores import FAISS  # FAISS vector store wrapper: stores embeddings + supports similarity search
 from langchain_core.documents import Document  # LangChain's Document type: page_content (text) + metadata (dict)
 from langchain_text_splitters import RecursiveCharacterTextSplitter  # splits long text into overlapping chunks along natural boundaries
+from pypdf import PdfReader  # extracts the text layer from PDF files
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))  # add the project root to sys.path so `from app import ...` resolves when this file is run directly
 from app import config  # noqa: E402  # project settings (paths, DEMO_MODE, model names, etc.)
@@ -23,22 +27,45 @@ from app.demo_stubs import DemoEmbeddings  # noqa: E402  # offline TF-IDF embedd
 
 def _extract_field(text: str, field: str) -> str:
     # Pull a single "Field: value" line out of a resume's raw text (e.g. "Name: Arjun Mehta").
-    match = re.search(rf"^{field}:\s*(.+)$", text, flags=re.MULTILINE)  # match "<field>:" at the start of any line, capture the rest of that line
+    match = re.search(rf"^[ \t]*{field}:\s*(.+)$", text, flags=re.MULTILINE)  # match "<field>:" at the start of any line (PDF/Word text may indent it), capture the rest of that line
     return match.group(1).strip() if match else ""  # return the captured value (trimmed), or "" if the field wasn't found
 
 
+SUPPORTED_EXTENSIONS = (".txt", ".pdf", ".docx")  # resume file types the app can read and accept as uploads
+
+
+def read_resume_text(path: Path) -> str:
+    """Return the plain text of a .txt, .pdf or .docx resume ("" if it has no extractable text)."""
+    suffix = path.suffix.lower()  # compare extensions case-insensitively (e.g. "CV.PDF")
+    if suffix == ".pdf":
+        pages = PdfReader(str(path)).pages  # one entry per PDF page
+        return "\n".join(page.extract_text() or "" for page in pages).strip()  # scanned (image-only) pages yield no text
+    if suffix == ".docx":
+        return (docx2txt.process(str(path)) or "").strip()  # paragraphs and table cells as plain text
+    if suffix == ".txt":
+        return path.read_text(encoding="utf-8", errors="replace").strip()  # tolerate stray non-UTF-8 bytes instead of failing
+    raise ValueError(f"Unsupported file type '{path.suffix}'. Use one of: {', '.join(SUPPORTED_EXTENSIONS)}")
+
+
 def load_resumes() -> list[Document]:
-    """Load every .txt resume in data/resumes as a LangChain Document,
+    """Load every supported resume in data/resumes as a LangChain Document,
     tagging each with candidate_name / candidate_title metadata parsed
     from the resume header."""
     documents = []  # accumulator for one Document per resume file
-    for path in sorted(config.RESUMES_DIR.glob("*.txt")):  # iterate every .txt file in data/resumes, sorted for deterministic ordering
-        text = path.read_text(encoding="utf-8")  # read the full resume text from disk
+    paths = sorted(
+        p for p in config.RESUMES_DIR.glob("*")
+        if p.suffix.lower() in SUPPORTED_EXTENSIONS and not p.name.startswith(".")  # skip hidden files, e.g. an in-progress upload
+    )  # every supported file in data/resumes, sorted for deterministic ordering
+    for path in paths:
+        text = read_resume_text(path)  # extract the full resume text, whatever the file format
+        if not text:  # e.g. a scanned PDF with no text layer: nothing to search, so skip it rather than index an empty document
+            print(f"Skipping {path.name}: no extractable text.")
+            continue
         name = _extract_field(text, "Name") or path.stem  # parse the candidate's name; fall back to the filename (without extension) if missing
         title = _extract_field(text, "Title") or ""  # parse the candidate's job title; default to empty string if missing
         documents.append(
             Document(
-                page_content=text,  # the full raw resume text (this is what gets chunked/embedded)
+                page_content=text,  # the full resume text (this is what gets chunked/embedded)
                 metadata={
                     "source": path.name,          # original filename, used later to cite/dedupe results
                     "candidate_name": name,        # parsed name, shown in the UI/CLI answer
@@ -47,6 +74,34 @@ def load_resumes() -> list[Document]:
             )
         )
     return documents  # one Document per resume file, not yet chunked
+
+
+def save_uploaded_resume(filename: str, data: bytes) -> Path:
+    """Validate an uploaded resume and save it into data/resumes.
+
+    Raises ValueError for an unsupported type or a file with no readable text
+    (nothing is left on disk in that case). Re-uploading a file with the same
+    name replaces the earlier version. Call build_vectorstore() afterwards so
+    the new resume becomes searchable.
+    """
+    safe_name = Path(filename).name  # drop any directory parts, so an upload can't write outside data/resumes (e.g. "../../x.txt")
+    if Path(safe_name).suffix.lower() not in SUPPORTED_EXTENSIONS:
+        raise ValueError(f"{safe_name}: unsupported file type. Use one of: {', '.join(SUPPORTED_EXTENSIONS)}")
+
+    config.RESUMES_DIR.mkdir(parents=True, exist_ok=True)  # make sure the resume folder exists
+    target = config.RESUMES_DIR / safe_name
+    tmp = target.with_name(f".upload-{safe_name}")  # write to a hidden temp file first, so a bad upload never replaces a good resume
+    tmp.write_bytes(data)
+    try:
+        text = read_resume_text(tmp)  # prove the file is readable before accepting it
+    except Exception as exc:  # corrupt or mislabelled files make the PDF/Word readers raise various errors
+        tmp.unlink()
+        raise ValueError(f"{safe_name}: could not read the file ({exc}).") from exc
+    if not text:
+        tmp.unlink()
+        raise ValueError(f"{safe_name}: no readable text found (scanned PDFs are not supported).")
+    tmp.replace(target)  # accept: move into place (overwrites an earlier upload with the same name)
+    return target
 
 
 def split_documents(documents: list[Document]) -> list[Document]:

@@ -7,3 +7,19 @@ venv/
 eval/report.json
 eval-report.json
 .pytest_cache/
+htmlcov/
+
+# Resume library: keep real/uploaded resumes out of git.
+# Only the 8 fictional samples are tracked (tests, evaluation and CI need them).
+data/resumes/*
+!data/resumes/application_security_engineer.txt
+!data/resumes/data_engineer.txt
+!data/resumes/devops_cloud_engineer_aws.txt
+!data/resumes/fullstack_python_developer.txt
+!data/resumes/java_backend_springboot.txt
+!data/resumes/ml_engineer.txt
+!data/resumes/network_security_engineer_aws.txt
+!data/resumes/react_ui_developer.txt
+
+# Generated index (contains resume text): rebuild with `python -m app.ingest`.
+vectorstore/

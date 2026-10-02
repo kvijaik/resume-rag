@@ -7,3 +7,5 @@ streamlit>=1.38.0
 scikit-learn>=1.4.0
 tiktoken>=0.7.0
 python-dotenv>=1.0.0
+pypdf>=4.0
+docx2txt>=0.8
