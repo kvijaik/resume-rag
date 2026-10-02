@@ -31,6 +31,28 @@ def _extract_field(text: str, field: str) -> str:
     return match.group(1).strip() if match else ""  # return the captured value (trimmed), or "" if the field wasn't found
 
 
+_HEADING_WORDS = {"resume", "résumé", "curriculum vitae", "cv", "bio-data", "biodata"}  # document titles that sit above the candidate's name
+_NAME_RE = re.compile(r"^[A-Za-z][A-Za-z.'\-]*(?: [A-Za-z][A-Za-z.'\-]*){1,4}$")  # 2-5 words of letters (allowing initials like "K." or "O'Neil")
+
+
+def _guess_name_and_title(text: str) -> tuple[str, str]:
+    """Best-effort name/title for real resumes that have no "Name:"/"Title:" lines.
+
+    Most resumes open with the candidate's name, often followed by their job
+    title. Returns ("", "") when the opening lines don't look like that, so the
+    caller can fall back to the file name.
+    """
+    lines = [" ".join(line.split()) for line in text.splitlines()]  # collapse runs of spaces/tabs from PDF/Word extraction
+    lines = [line for line in lines if line and line.lower().strip(":") not in _HEADING_WORDS][:2]  # first two meaningful lines
+    if not lines or not _NAME_RE.match(lines[0]):  # first line is contact details, a heading, etc. -> not a name
+        return "", ""
+    name = lines[0].title() if lines[0].isupper() else lines[0]  # "DARSHAN RAJ" -> "Darshan Raj"; keep mixed case as written
+    title = ""
+    if len(lines) > 1 and len(lines[1]) <= 60 and not any(ch in lines[1] for ch in "@|:/") and not any(ch.isdigit() for ch in lines[1]):
+        title = lines[1]  # short line with no contact details -> treat as the job title
+    return name, title
+
+
 SUPPORTED_EXTENSIONS = (".txt", ".pdf", ".docx")  # resume file types the app can read and accept as uploads
 
 
@@ -61,8 +83,9 @@ def load_resumes() -> list[Document]:
         if not text:  # e.g. a scanned PDF with no text layer: nothing to search, so skip it rather than index an empty document
             print(f"Skipping {path.name}: no extractable text.")
             continue
-        name = _extract_field(text, "Name") or path.stem  # parse the candidate's name; fall back to the filename (without extension) if missing
-        title = _extract_field(text, "Title") or ""  # parse the candidate's job title; default to empty string if missing
+        guessed_name, guessed_title = _guess_name_and_title(text)  # for real resumes, which rarely have "Name:"/"Title:" lines
+        name = _extract_field(text, "Name") or guessed_name or path.stem  # explicit "Name:" line first, then the opening line, then the filename
+        title = _extract_field(text, "Title") or guessed_title  # explicit "Title:" line first, then the line under the name (may be "")
         documents.append(
             Document(
                 page_content=text,  # the full resume text (this is what gets chunked/embedded)
@@ -120,21 +143,17 @@ def build_vectorstore() -> None:
 
     documents = load_resumes()  # load all resumes as whole-file Documents
     if not documents:  # guard against an empty/misconfigured resumes folder
-        raise RuntimeError(f"No resumes found in {config.RESUMES_DIR}")
+        raise RuntimeError(
+            f"No resumes found in {config.RESUMES_DIR}. Add .txt/.pdf/.docx resumes there "
+            f"(or copy the samples from {config.SAMPLE_RESUMES_DIR}) and run this again."
+        )
     chunks = split_documents(documents)  # split each resume into smaller overlapping chunks for retrieval
     print(f"Loaded {len(documents)} resumes -> split into {len(chunks)} chunks.")  # progress output for the CLI user
 
-    relevance_score_fn = None  # optional custom function FAISS uses to convert raw distance -> a 0-1 relevance score; None = use FAISS's default
     if config.DEMO_MODE:  # offline path: no OpenAI API key available/used
         print("DEMO_MODE=1 -> fitting local TF-IDF DemoEmbeddings (no API key needed).")
         embeddings = DemoEmbeddings.fit([c.page_content for c in chunks])  # fit a fresh TF-IDF vectorizer on the chunk texts (learns vocabulary once, here)
         embeddings.save(config.VECTORSTORE_DIR / "demo_vectorizer.pkl")  # persist the fitted vectorizer so query time uses the exact same vocabulary/IDF
-        # TF-IDF vectors are L2-normalized, so squared L2 distance `d` relates
-        # to cosine similarity by cos_sim = 1 - d/2. Use that as the 0-1
-        # relevance score instead of FAISS's default (which assumes
-        # OpenAI-style embedding magnitudes and produces out-of-range values
-        # for TF-IDF vectors).
-        relevance_score_fn = lambda distance: max(0.0, min(1.0, 1.0 - distance / 2.0))  # noqa: E731  # clamp the cosine-derived score into [0, 1]
     else:  # production path: real OpenAI embeddings
         from langchain_openai import OpenAIEmbeddings  # imported lazily so this dependency/API key is only needed when actually used
 
@@ -144,9 +163,9 @@ def build_vectorstore() -> None:
             api_key=config.OPENAI_API_KEY,        # credentials for the OpenAI API
         )
 
-    vectorstore = FAISS.from_documents(
-        chunks, embeddings, relevance_score_fn=relevance_score_fn
-    )  # embed every chunk and build an in-memory FAISS similarity index over them
+    # Scores are only computed at search time, so the relevance function is set
+    # when the index is loaded (see app/rag_chain.py -> load_vectorstore).
+    vectorstore = FAISS.from_documents(chunks, embeddings)  # embed every chunk and build an in-memory FAISS similarity index over them
     vectorstore.save_local(str(config.VECTORSTORE_DIR / "faiss_index"))  # persist the FAISS index (and its docstore) to disk for later loading
     print(f"FAISS index saved to {config.VECTORSTORE_DIR / 'faiss_index'}")  # confirm completion to the CLI user
 

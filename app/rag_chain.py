@@ -4,10 +4,11 @@ RAG chain: retrieval + prompt-engineered, grounded generation over resumes.
 Pipeline for every user query:
   1. Guardrail: is the query long/specific enough to even attempt retrieval?
      If not -> return config.CAPABILITY_MESSAGE ("requirement is not clear...").
-  2. Retrieve top-k resume chunks from the FAISS vector store with relevance
-     scores.
-  3. Guardrail: is the best match's relevance score above MIN_SIMILARITY_SCORE?
-     If not -> return config.REJECTION_MESSAGE ("Sorry, I cannot help...").
+  2. Retrieve the top-k resumes (up to MAX_CHUNKS_PER_RESUME chunks each) from
+     the FAISS vector store, scored by cosine similarity (0-1).
+  3. Guardrail: keep only resumes whose best chunk scores at least
+     MIN_SIMILARITY_SCORE. If none do -> return config.REJECTION_MESSAGE
+     ("Sorry, I cannot help...").
   4. Generate the final answer, strictly grounded in the retrieved chunks:
        - DEMO_MODE=1 -> app.demo_stubs.demo_answer() (template-based, offline)
        - DEMO_MODE=0 -> ChatOpenAI with RESUME_MATCH_PROMPT (real LLM call)
@@ -70,6 +71,19 @@ RESUME_MATCH_PROMPT = ChatPromptTemplate.from_messages(
 # ---------------------------------------------------------------------------
 # Vector store / retriever loading
 # ---------------------------------------------------------------------------
+def cosine_relevance(distance: float) -> float:
+    """Turn a FAISS distance into a 0-1 cosine-similarity score.
+
+    FAISS returns the squared L2 distance `d`. Both embedding backends produce
+    unit-length vectors (OpenAI embeddings are normalized; TF-IDF rows are
+    L2-normalized), and for unit vectors cosine similarity = 1 - d/2.
+    LangChain's default conversion assumes plain (not squared) distance, which
+    squashes scores and can make them negative - and LangChain then logs a
+    warning containing the matched resume text.
+    """
+    return max(0.0, min(1.0, 1.0 - distance / 2.0))  # clamp: unrelated text can score slightly below 0
+
+
 def load_vectorstore() -> FAISS:
     # Load the previously-built FAISS index from disk (see app/ingest.py for how it's built), wired to the right embedding backend.
     index_path = config.VECTORSTORE_DIR / "faiss_index"  # expected location of the persisted FAISS index directory
@@ -78,12 +92,8 @@ def load_vectorstore() -> FAISS:
             "Vector store not found. Run `python -m app.ingest` first to build it."
         )
 
-    relevance_score_fn = None  # optional distance->[0,1] score converter; None means "use FAISS's built-in default"
     if config.DEMO_MODE:  # offline path: reconstruct the same TF-IDF embedder used at ingest time
         embeddings = DemoEmbeddings.load(config.VECTORSTORE_DIR / "demo_vectorizer.pkl")  # load the vectorizer fitted during ingestion, so query vectors land in the same space as the stored document vectors
-        # See app/ingest.py for why TF-IDF (DemoEmbeddings) needs a custom
-        # relevance score function instead of FAISS's OpenAI-tuned default.
-        relevance_score_fn = lambda distance: max(0.0, min(1.0, 1.0 - distance / 2.0))  # noqa: E731  # convert L2 distance between unit-normalized TF-IDF vectors into a cosine-similarity-based 0-1 score
     else:  # production path: real OpenAI embeddings
         from langchain_openai import OpenAIEmbeddings  # imported lazily so this dependency/API key is only required when actually used
 
@@ -95,8 +105,30 @@ def load_vectorstore() -> FAISS:
         str(index_path),
         embeddings,                                    # embedding backend used to embed future queries (must match what built the index)
         allow_dangerous_deserialization=True,          # required by langchain_community FAISS to unpickle the locally-saved index (safe here: we trust our own vectorstore/ dir)
-        relevance_score_fn=relevance_score_fn,
+        relevance_score_fn=cosine_relevance,           # same 0-1 cosine score for both backends
     )
+
+
+def retrieve_resumes(vs: FAISS, query: str, top_k: int | None = None) -> list:
+    """Return (chunk, score) pairs for the `top_k` best-matching resumes, best first.
+
+    Searching returns chunks, and one resume with several strong chunks could
+    otherwise fill every slot and hide other candidates. So we fetch a wider
+    pool of chunks and keep at most MAX_CHUNKS_PER_RESUME per resume. Each
+    resume's first pair is its best-scoring chunk.
+    """
+    top_k = top_k or config.TOP_K
+    pool = vs.similarity_search_with_relevance_scores(query, k=top_k * 10)  # best-first; wide enough to reach top_k distinct resumes
+    per_resume: dict[str, list] = {}  # source file -> its kept chunks, in first-seen (= best-score) order
+    for doc, score in pool:
+        source = doc.metadata.get("source", "unknown")
+        if source not in per_resume:
+            if len(per_resume) == top_k:  # already have enough candidates; ignore new resumes
+                continue
+            per_resume[source] = []
+        if len(per_resume[source]) < config.MAX_CHUNKS_PER_RESUME:
+            per_resume[source].append((doc, score))
+    return [hit for hits in per_resume.values() for hit in hits]
 
 
 # ---------------------------------------------------------------------------
@@ -148,10 +180,14 @@ def answer_query(query: str, vectorstore: FAISS | None = None) -> dict:
         if not np.any(query_vector):  # True only if every component is exactly 0 (no vocabulary overlap at all)
             return {"answer": config.REJECTION_MESSAGE, "status": "no_match", "sources": []}  # short-circuit: refuse instead of trusting an undefined similarity score
 
-    results = vs.similarity_search_with_relevance_scores(query, k=config.TOP_K)  # embed the query, retrieve the top-k most similar chunks with their relevance scores
+    hits = retrieve_resumes(vs, query)  # top-k resumes, up to MAX_CHUNKS_PER_RESUME chunks each, best first
 
     threshold = config.DEMO_MIN_SIMILARITY_SCORE if config.DEMO_MODE else config.MIN_SIMILARITY_SCORE  # pick the threshold matching the active embedding backend's score range
-    if not results or results[0][1] < threshold:  # guardrail #2: no results at all, or even the best match scores below the confidence threshold
+    best_score: dict[str, float] = {}  # each resume's best chunk score (its first hit)
+    for doc, score in hits:
+        best_score.setdefault(doc.metadata.get("source", "unknown"), score)
+    results = [(doc, score) for doc, score in hits if best_score[doc.metadata.get("source", "unknown")] >= threshold]  # guardrail #2: drop resumes that don't match well enough
+    if not results:  # no resume scored above the confidence threshold
         return {"answer": config.REJECTION_MESSAGE, "status": "no_match", "sources": []}
 
     sources = sorted({doc.metadata.get("source", "unknown") for doc, _ in results})  # unique, sorted list of resume filenames behind the retrieved chunks
@@ -169,8 +205,10 @@ def answer_query(query: str, vectorstore: FAISS | None = None) -> dict:
         api_key=config.OPENAI_API_KEY,          # credentials for the OpenAI API
     )
     context = "\n\n---\n\n".join(
-        f"[Source: {doc.metadata.get('source')}]\n{doc.page_content}" for doc, _ in results
-    )  # concatenate the retrieved chunks into one context block, each labeled with its source file, separated by a divider
+        f"[Source: {doc.metadata.get('source')} | Candidate: {doc.metadata.get('candidate_name')}"
+        f"{' — ' + doc.metadata['candidate_title'] if doc.metadata.get('candidate_title') else ''}]\n{doc.page_content}"
+        for doc, _ in results
+    )  # concatenate the retrieved chunks into one context block, each labeled with its source file and candidate (later chunks of a resume don't repeat the name), separated by a divider
     chain = RESUME_MATCH_PROMPT | llm  # LangChain Expression Language: pipe the filled-in prompt straight into the chat model
     response = chain.invoke({"context": context, "question": query})  # fill {context}/{question} into the prompt and call the model
     answer_text = response.content  # extract the plain-text answer from the model's response object
@@ -178,4 +216,5 @@ def answer_query(query: str, vectorstore: FAISS | None = None) -> dict:
     if answer_text.strip().startswith("Sorry, I cannot help"):  # the model itself decided (per SYSTEM_PROMPT rule 2) that nothing in the context matches
         return {"answer": answer_text, "status": "no_match", "sources": []}  # report as no_match and drop sources, since the model didn't actually use them
 
-    return {"answer": answer_text, "status": "matched", "sources": sources}
+    cited = [s for s in sources if s in answer_text]  # the prompt requires a source file per candidate; keep only resumes the answer actually recommends
+    return {"answer": answer_text, "status": "matched", "sources": cited or sources}  # fall back to all retrieved resumes if the model cited none by file name

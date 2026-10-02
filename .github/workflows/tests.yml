@@ -20,8 +20,6 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Unit and integration tests
         run: pytest --cov=app --cov-branch --cov-report=term-missing --cov-fail-under=100
-      - name: Build demo index
-        run: python -m app.ingest
       - name: RAG evaluation (quality gate)
         run: python -m eval.run_eval --min-status-accuracy 0.9 --min-hit-at-k 1.0 --json eval-report.json
       - name: Upload evaluation report

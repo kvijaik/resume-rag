@@ -15,6 +15,8 @@ import pytest
 # environment variables at import time.
 os.environ["DEMO_MODE"] = "1"
 os.environ.pop("OPENAI_API_KEY", None)
+# Tests always run against the fictional samples, never the live resume library.
+os.environ["RESUMES_DIR"] = str(Path(__file__).resolve().parent.parent / "data" / "sample_resumes")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 

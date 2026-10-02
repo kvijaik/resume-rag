@@ -44,3 +44,33 @@ def test_chunks_respect_size_and_keep_metadata():
         assert {"source", "candidate_name", "candidate_title"} <= c.metadata.keys()
     # Every resume contributes at least one chunk.
     assert {c.metadata["source"] for c in chunks} == {d.metadata["source"] for d in docs}
+
+
+import pytest  # noqa: E402
+
+from app.ingest import _guess_name_and_title  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("Darshan Raj K P\nJava Full Stack Developer (Junior)\n+91 98 | a@b.com", ("Darshan Raj K P", "Java Full Stack Developer (Junior)")),
+        ("RESUME\n\nPRIYA SHARMA\nFrontend Engineer", ("Priya Sharma", "Frontend Engineer")),
+        ("Curriculum Vitae:\nJohn O'Neil\njohn@example.com | +1 555 0100", ("John O'Neil", "")),
+        ("Jane Doe\nSenior Engineer at Acme since 2019", ("Jane Doe", "")),
+        ("Jane Doe", ("Jane Doe", "")),
+        ("jane.doe@example.com | +1 555 0100\nJane Doe", ("", "")),
+        ("Madonna\nSinger", ("", "")),
+        ("", ("", "")),
+    ],
+)
+def test_guess_name_and_title_from_opening_lines(text, expected):
+    assert _guess_name_and_title(text) == expected
+
+
+def test_real_style_resume_gets_name_from_first_line(tmp_path, monkeypatch):
+    (tmp_path / "cv_final_v2.txt").write_text("ANANYA IYER\nSecurity Engineer\nSkills: OWASP", encoding="utf-8")
+    monkeypatch.setattr(config, "RESUMES_DIR", tmp_path)
+    [doc] = load_resumes()
+    assert doc.metadata["candidate_name"] == "Ananya Iyer"
+    assert doc.metadata["candidate_title"] == "Security Engineer"

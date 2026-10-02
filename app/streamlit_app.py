@@ -23,17 +23,6 @@ STATUS_BADGES = {
     "unclear": "❓ Requirement unclear",
 }  # maps answer_query()'s status string to a human-readable badge shown above each answer
 
-SUPPORTED_ROLES = [
-    "Java Backend Developer (Spring Boot)",
-    "React UI / Frontend Developer",
-    "Full Stack Web Developer (Python)",
-    "Network Security Engineer (AWS)",
-    "Application Security Engineer",
-    "DevOps / Cloud Engineer (AWS)",
-    "Data Engineer",
-    "Machine Learning Engineer",
-]  # static list shown in the sidebar so users know what technology profiles exist in the resume corpus
-
 EXAMPLE_QUERIES = [
     "Have requirement for Java Full stack developer provide the matching resume",
     "Looking for an AWS network security engineer with firewall experience",
@@ -47,6 +36,14 @@ def get_vectorstore():
     # Loads the FAISS index once per Streamlit server process and reuses it across reruns/users
     # (st.cache_resource caches non-serializable objects like this, unlike st.cache_data).
     return load_vectorstore()
+
+
+def library_candidates(vectorstore) -> list[tuple[str, str]]:
+    """(name, title) of every resume in the loaded index, sorted by name."""
+    by_source = {}  # source file -> (name, title); every chunk of a resume carries the same metadata
+    for doc in vectorstore.docstore._dict.values():  # InMemoryDocstore keeps the indexed chunks in _dict
+        by_source.setdefault(doc.metadata.get("source"), (doc.metadata.get("candidate_name", ""), doc.metadata.get("candidate_title", "")))
+    return sorted(by_source.values())
 
 
 def add_uploaded_resumes(files) -> None:
@@ -81,11 +78,7 @@ def main():
             icon="🔧",
         )
 
-    with st.sidebar:  # left sidebar: static reference info + example query shortcuts
-        st.subheader("Supported technology profiles")
-        for role in SUPPORTED_ROLES:  # list every role the resume corpus covers
-            st.markdown(f"- {role}")
-        st.divider()
+    with st.sidebar:  # left sidebar: example query shortcuts, resume upload, and (below, once loaded) the library contents
         st.subheader("Try an example")
         for q in EXAMPLE_QUERIES:  # render one button per example query
             if st.button(q, use_container_width=True, key=f"ex_{q}"):  # unique widget key per query text, required by Streamlit for buttons in a loop
@@ -106,6 +99,13 @@ def main():
     except RuntimeError as e:
         st.error(str(e))  # show the "run ingest first" message to the user
         st.stop()  # halt script execution here; nothing below runs without a vector store
+
+    with st.sidebar:  # list who is actually searchable, so users know what the library covers
+        candidates = library_candidates(vectorstore)
+        st.divider()
+        st.subheader(f"In the library ({len(candidates)})")
+        for name, title in candidates:
+            st.markdown(f"- {name}" + (f" — {title}" if title else ""))
 
     if "messages" not in st.session_state:  # first run for this browser session: seed the chat history with a greeting
         st.session_state.messages = [

@@ -32,7 +32,8 @@ def test_first_load_shows_greeting_banner_and_sidebar(app):
     assert "DEMO_MODE" in app.info[0].value
     assert "Hi! Describe a hiring requirement" in app.chat_message[0].markdown[0].value
     sidebar_text = " ".join(m.value for m in app.sidebar.markdown)
-    assert "Machine Learning Engineer" in sidebar_text
+    assert "In the library (8)" in [h.value for h in app.sidebar.subheader]
+    assert "Aditya Nair — Machine Learning Engineer" in sidebar_text
     assert len([b for b in app.sidebar.button if b.key.startswith("ex_")]) == 4
     assert app.file_uploader(key="resume_upload").label == "Upload .txt, .pdf or .docx files"
 

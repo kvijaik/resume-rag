@@ -43,7 +43,16 @@ def test_llm_answer_is_returned_as_matched(vectorstore, fake_llm):
     set_reply("**Priya Sharma — React UI Developer**\n- Source file: react_ui_developer.txt")
     result = answer_query(QUERY, vectorstore=vectorstore)
     assert result["status"] == "matched"
+    assert result["sources"] == ["react_ui_developer.txt"]  # only the resume the answer cites, not every retrieved one
+
+
+def test_sources_fall_back_to_retrieved_resumes_when_none_cited(vectorstore, fake_llm):
+    set_reply, _ = fake_llm
+    set_reply("**Priya Sharma — React UI Developer**\n- Strong React and Redux experience")
+    result = answer_query(QUERY, vectorstore=vectorstore)
+    assert result["status"] == "matched"
     assert "react_ui_developer.txt" in result["sources"]
+    assert len(result["sources"]) > 1
 
 
 def test_llm_refusal_is_reported_as_no_match(vectorstore, fake_llm):
@@ -60,7 +69,7 @@ def test_prompt_contains_labelled_context_and_question(vectorstore, fake_llm):
     answer_query(QUERY, vectorstore=vectorstore)
     prompt_value = calls[0]
     text = prompt_value.to_string() if hasattr(prompt_value, "to_string") else str(prompt_value)
-    assert "[Source: " in text
+    assert "[Source: react_ui_developer.txt | Candidate: Priya Sharma — React UI Developer (Frontend Engineer)]" in text
     assert QUERY in text
     assert "Ground every claim strictly in the CONTEXT" in text
 

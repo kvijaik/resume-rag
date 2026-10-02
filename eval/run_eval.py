@@ -8,6 +8,9 @@ Scores the pipeline against eval/golden_set.json on two levels:
                when it should?
 
 Runs in whichever mode .env selects. DEMO_MODE=1 needs no API key.
+The evaluation always builds its own index from the fictional samples in
+data/sample_resumes/ (in a temporary folder), so it is unaffected by the live
+resume library and never touches vectorstore/.
 
     python -m eval.run_eval                  # print report
     python -m eval.run_eval --min-status-accuracy 0.9   # fail (exit 1) below a quality gate
@@ -19,28 +22,34 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from app import config  # noqa: E402
-from app.rag_chain import answer_query, is_query_too_vague, load_vectorstore  # noqa: E402
+from app.ingest import build_vectorstore  # noqa: E402
+from app.rag_chain import answer_query, is_query_too_vague, load_vectorstore, retrieve_resumes  # noqa: E402
 
 GOLDEN = Path(__file__).with_name("golden_set.json")
 
 
 def ranked_sources(vs, query: str, k: int) -> list[str]:
-    """Unique source files in retrieval order (answer_query sorts them alphabetically)."""
-    seen: list[str] = []
-    for doc, _ in vs.similarity_search_with_relevance_scores(query, k=k):
-        src = doc.metadata.get("source")
-        if src not in seen:
-            seen.append(src)
-    return seen
+    """The top-k resumes in retrieval order (answer_query sorts them alphabetically)."""
+    return list(dict.fromkeys(doc.metadata.get("source") for doc, _ in retrieve_resumes(vs, query, top_k=k)))
+
+
+def build_sample_index(out_dir: Path):
+    """Index the fictional sample resumes into out_dir and load it."""
+    config.RESUMES_DIR = config.SAMPLE_RESUMES_DIR
+    config.VECTORSTORE_DIR = out_dir
+    build_vectorstore()
+    return load_vectorstore()
 
 
 def evaluate(k: int) -> dict:
     cases = json.loads(GOLDEN.read_text(encoding="utf-8"))
-    vs = load_vectorstore()
+    with tempfile.TemporaryDirectory() as tmp:
+        vs = build_sample_index(Path(tmp))
     rows = []
     for c in cases:
         result = answer_query(c["query"], vectorstore=vs)
